@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lav1n's Webhooks</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        discord: {
+                            blurple: '#5865F2',
+                            blurpleHover: '#4752C4',
+                            bg: '#313338',
+                            darkBg: '#111214',
+                            card: '#2b2d31',
+                            input: '#1e1f22',
+                            text: '#dbdee1',
+                            muted: '#949ba4',
+                            heading: '#f2f3f5',
+                            border: '#3f4147',
+                            green: '#23a55a',
+                            red: '#f23f43',
+                            yellow: '#f0b232'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        discord: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #111214;
+            color: #dbdee1;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #60A5FA 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 15px -3px rgba(139, 92, 246, 0.4);
+        }
+        .btn-gradient:hover {
+            opacity: 0.95;
+            box-shadow: 0 6px 20px -2px rgba(139, 92, 246, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .gradient-card-border {
+            position: relative;
+            background: #2b2d31;
+            border-radius: 12px;
+        }
+        .gradient-card-border::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 13px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.2), rgba(63, 65, 71, 0.3));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .discord-input {
+            background-color: #1e1f22;
+            border: 1px solid #3f4147;
+            color: #f2f3f5;
+            transition: all 0.15s ease;
+        }
+        .discord-input:focus {
+            outline: none;
+            border-color: #a855f7;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #111214; }
+        ::-webkit-scrollbar-thumb { background: #2b2d31; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f4147; }
+
+        /* Discord Preview Markdown */
+        .discord-markdown strong { font-weight: 700; color: #fff; }
+        .discord-markdown em { font-style: italic; }
+        .discord-markdown u { text-decoration: underline; }
+        .discord-markdown code { background: #1e1f22; padding: 2px 5px; border-radius: 4px; font-family: monospace; font-size: 0.85em; color: #e0e0e0; }
+        .discord-markdown pre { background: #1e1f22; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.85em; margin: 4px 0; border: 1px solid #3f4147; overflow-x: auto; }
+        .discord-markdown blockquote { border-left: 4px solid #8b5cf6; padding-left: 8px; margin: 4px 0; color: #b5bac1; }
+    </style>
+</head>
+
+<body class="bg-discord-darkBg text-discord-text h-full font-sans antialiased flex flex-col overflow-hidden">
+
+    <header class="bg-discord-card/90 backdrop-blur border-b border-discord-border px-6 py-3 flex items-center justify-between shrink-0 z-50 relative overflow-visible">
+        <!-- Ambient Top Glow -->
+        <div class="absolute -top-10 left-1/4 w-96 h-20 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 blur-2xl pointer-events-none"></div>
+
+        <div class="flex items-center gap-3 relative z-10">
+            <div class="p-2 rounded-xl text-white shadow-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                <i data-lucide="webhook" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black tracking-wide flex items-center gap-2">
+                    <span class="text-gradient">Lav1n's Webhooks</span>
+                    <span class="text-[10px] font-mono bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 uppercase font-semibold">Studio</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 relative z-50">
+            <!-- Proxy Toggle -->
+            <button id="proxyToggleBtn" onclick="toggleProxySetting()" class="hidden sm:flex items-center gap-2 bg-discord-input px-3 py-1.5 rounded-lg border border-discord-border text-xs font-mono text-discord-muted hover:text-white transition">
+                <span id="proxyBadge" class="w-2 h-2 rounded-full bg-discord-green shadow-[0_0_8px_#23a55a]"></span>
+                <span id="proxyLabel">CORS Proxy Auto</span>
+            </button>
+
+            <!-- Presets Dropdown -->
+            <div class="relative inline-block text-left z-50">
+                <button onclick="toggleTemplatesMenu()" class="flex items-center gap-1.5 bg-discord-input hover:bg-discord-border text-xs font-medium text-discord-heading px-3 py-1.5 rounded-lg border border-discord-border transition">
+                    <i data-lucide="layout-template" class="w-3.5 h-3.5 text-purple-400"></i>
+                    <span>Presets</span>
+                    <i data-lucide="chevron-down" class="w-3 h-3 text-discord-muted"></i>
+                </button>
+                <div id="templatesDropdown" class="hidden absolute right-0 mt-2 w-56 bg-discord-card rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-discord-border py-1.5 z-[9999] ring-1 ring-black/50">
+                    <div class="px-3 py-1 text-[10px] font-bold text-discord-muted uppercase tracking-wider">Presets Library</div>
+                    <button onclick="loadTemplate('announcement')" class="w-full text-left px-3 py-2 text-xs text-discord-text hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white flex items-center gap-2 transition">
+                        <i data-lucide="megaphone" class="w-3.5 h-3.5 text-discord-yellow"></i> Announcement
+                    </button>
+                    <button onclick="loadTemplate('bugReport')" class="w-full text-left px-3 py-2 text-xs text-discord-text hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white flex items-center gap-2 transition">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-discord-red"></i> Bug Report
+                    </button>
+                    <button onclick="loadTemplate('welcome')" class="w-full text-left px-3 py-2 text-xs text-discord-text hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white flex items-center gap-2 transition">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-discord-green"></i> Member Welcome
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="exportJSON()" class="p-1.5 text-discord-muted hover:text-white hover:bg-discord-input rounded-lg border border-transparent hover:border-discord-border transition" title="Export Payload JSON">
+                <i data-lucide="download" class="w-4 h-4"></i>
+            </button>
+            <button onclick="importJSONPrompt()" class="p-1.5 text-discord-muted hover:text-white hover:bg-discord-input rounded-lg border border-transparent hover:border-discord-border transition" title="Import Payload JSON">
+                <i data-lucide="upload" class="w-4 h-4"></i>
+            </button>
+            <button onclick="clearAllInputs()" class="p-1.5 text-discord-muted hover:text-discord-red hover:bg-discord-input rounded-lg border border-transparent hover:border-discord-border transition" title="Clear Content (Keeps URL)">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="preflightBar" class="bg-discord-card/60 border-b border-discord-border px-6 py-1.5 flex items-center justify-between text-xs font-mono shrink-0">
+        <div class="flex items-center gap-2 text-discord-muted">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-discord-green"></i>
+            <span class="font-semibold uppercase text-discord-muted text-[11px]">Validation:</span>
+            <span id="preflightStatus" class="text-discord-text">Checking payload...</span>
+        </div>
+        <div class="flex items-center gap-2 text-[11px]">
+            <span id="preflightCount" class="px-2 py-0.5 rounded bg-discord-input text-discord-text border border-discord-border">0 Embeds</span>
+            <span id="preflightChars" class="px-2 py-0.5 rounded bg-discord-input text-discord-text border border-discord-border">0 / 6000 Chars</span>
+        </div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Panel: Form Controls -->
+        <div id="colEditor" class="w-full lg:w-1/2 flex flex-col h-full bg-discord-darkBg border-r border-discord-border overflow-y-auto p-4 lg:p-6 space-y-4">
+            
+            <!-- Webhook Connection Card -->
+            <div class="gradient-card-border p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold uppercase tracking-wider text-discord-heading flex items-center gap-2">
+                        <i data-lucide="link" class="w-3.5 h-3.5 text-indigo-400"></i> Webhook URL
+                    </label>
+                    <button onclick="openSavedWebhooksModal()" class="text-xs text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-1 font-mono">
+                        <i data-lucide="bookmark" class="w-3 h-3"></i> Saved (<span id="savedCount">0</span>)
+                    </button>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex gap-2">
+                        <input type="text" id="webhookUrl" oninput="handleWebhookUrlInput();" placeholder="https://discord.com/api/webhooks/..." value=""
+                            class="flex-1 discord-input text-xs rounded-lg px-3 py-2 font-mono">
+                        <button onclick="testConnection()" class="bg-discord-input hover:bg-discord-border text-xs font-medium text-discord-heading px-3 py-2 rounded-lg border border-discord-border shrink-0 transition flex items-center gap-1">
+                            <i data-lucide="wifi" class="w-3.5 h-3.5 text-discord-green"></i> Test
+                        </button>
+                        <button onclick="saveCurrentWebhook()" class="bg-discord-input hover:bg-discord-border text-discord-muted hover:text-discord-yellow p-2 rounded-lg border border-discord-border shrink-0 transition" title="Save URL">
+                            <i data-lucide="star" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Fetched Webhook Identity Info Badge -->
+                    <div id="webhookFetchedBadge" class="hidden flex items-center justify-between bg-discord-input/60 border border-discord-border px-2.5 py-1.5 rounded-lg text-xs">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <img id="webhookFetchedIcon" src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-4 h-4 rounded-full object-cover shrink-0">
+                            <span class="text-discord-muted text-[11px] truncate">
+                                Connected as: <strong id="webhookFetchedName" class="text-discord-heading">Webhook</strong>
+                            </span>
+                        </div>
+                        <span class="text-[10px] font-mono text-discord-green bg-discord-green/10 border border-discord-green/30 px-1.5 py-0.5 rounded shrink-0">
+                            Metadata Sync
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-discord-border/50">
+                        <div>
+                            <label class="text-[11px] font-medium text-discord-muted block mb-1">Bot Username Override</label>
+                            <input type="text" id="botName" oninput="updatePreview()" placeholder="Leave empty for Webhook default" value=""
+                                class="w-full discord-input text-xs rounded-lg px-2.5 py-1.5">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-medium text-discord-muted block mb-1">Bot Avatar Image URL</label>
+                            <input type="text" id="botAvatar" oninput="runPreflightValidation(); updatePreview();" placeholder="Leave empty for Webhook default" value=""
+                                class="w-full discord-input text-xs rounded-lg px-2.5 py-1.5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gradient-card-border p-4 space-y-4">
+                <!-- Main Message Content -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold uppercase tracking-wider text-discord-heading flex items-center gap-2">
+                            <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-400"></i> Message Content
+                        </label>
+                        <div class="flex items-center gap-1 bg-discord-input p-0.5 rounded-md border border-discord-border">
+                            <button onclick="insertMD('**', '**')" class="p-1 hover:bg-discord-border text-discord-muted hover:text-white rounded" title="Bold"><i data-lucide="bold" class="w-3 h-3"></i></button>
+                            <button onclick="insertMD('*', '*')" class="p-1 hover:bg-discord-border text-discord-muted hover:text-white rounded" title="Italic"><i data-lucide="italic" class="w-3 h-3"></i></button>
+                            <button onclick="insertMD('```\n', '\n```')" class="p-1 hover:bg-discord-border text-discord-muted hover:text-white rounded" title="Code Block"><i data-lucide="code" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                    <textarea id="msgContent" rows="3" oninput="runPreflightValidation(); updatePreview();" placeholder="Type plain text message content here..." 
+                        class="w-full discord-input text-xs rounded-lg p-2.5 resize-y"></textarea>
+                </div>
+
+                <!-- Embeds Section -->
+                <div class="space-y-3 pt-2 border-t border-discord-border">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-discord-heading flex items-center gap-2">
+                            <i data-lucide="layers" class="w-3.5 h-3.5 text-pink-400"></i> Rich Embeds (<span id="embedCount">0</span>/10)
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="clearAllEmbeds()" class="text-xs text-discord-muted hover:text-discord-red font-mono bg-discord-input px-2.5 py-1 rounded-lg border border-discord-border transition">
+                                Clear Embeds
+                            </button>
+                            <button onclick="addNewEmbed()" class="text-xs text-white btn-gradient px-3 py-1 rounded-lg font-semibold transition flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Embed
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="embedsContainer" class="space-y-3"></div>
+                </div>
+            </div>
+
+            <!-- Dispatch Bar -->
+            <div class="sticky bottom-0 bg-discord-card/90 backdrop-blur p-3.5 rounded-xl border border-discord-border shadow-2xl flex items-center justify-between gap-4 z-20">
+                <div class="flex items-center gap-2 text-xs font-mono" id="statusBadge">
+                    <span class="w-2.5 h-2.5 rounded-full bg-discord-muted"></span>
+                    <span class="text-discord-muted">Ready</span>
+                </div>
+                <button onclick="sendWebhook()" id="sendBtn" class="btn-gradient text-white font-bold text-xs tracking-wider px-6 py-2.5 rounded-lg transition flex items-center gap-2 uppercase">
+                    <i data-lucide="send" class="w-4 h-4"></i> Send Message
+                </button>
+            </div>
+        </div>
+
+        <div id="colPreview" class="hidden lg:flex w-full lg:w-1/2 flex-col h-full bg-[#313338] overflow-hidden">
+            
+            <div class="bg-discord-darkBg px-4 py-2 border-b border-discord-border flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2">
+                    <button id="tabPreviewBtn" onclick="switchRightTab('preview')" class="px-3 py-1 text-xs font-semibold rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 text-white border border-purple-500/30 flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="eye" class="w-3.5 h-3.5"></i> Discord Live Preview
+                    </button>
+                    <button id="tabJsonBtn" onclick="switchRightTab('json')" class="px-3 py-1 text-xs font-medium rounded-md text-discord-muted hover:text-white flex items-center gap-1.5">
+                        <i data-lucide="code" class="w-3.5 h-3.5"></i> Raw Payload JSON
+                    </button>
+                </div>
+                <span class="text-[11px] font-mono text-discord-muted flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-discord-green shadow-[0_0_6px_#23a55a]"></span> Live Render
+                </span>
+            </div>
+
+            <!-- Discord UI Simulator View -->
+            <div id="viewPreview" class="flex-1 overflow-y-auto p-4 lg:p-6 bg-discord-bg font-discord">
+                <div class="max-w-2xl mx-auto">
+                    <div class="flex gap-4 p-2.5 rounded-lg hover:bg-[#2e3035] transition">
+                        <img id="prevAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" 
+                            onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"
+                            class="w-10 h-10 rounded-full shrink-0 object-cover mt-0.5 border border-discord-border">
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span id="prevBotName" class="font-semibold text-discord-heading text-sm hover:underline cursor-pointer">Lav1n's Webhook</span>
+                                <span class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5 uppercase tracking-wide">
+                                    <i data-lucide="check" class="w-2.5 h-2.5"></i> BOT
+                                </span>
+                                <span id="prevMsgTime" class="text-xs text-discord-muted ml-1">Today at 12:00 PM</span>
+                            </div>
+
+                            <div id="prevContent" class="text-sm text-discord-text space-y-1 discord-markdown break-words hidden"></div>
+                            <div id="prevEmbedsList" class="space-y-2 mt-2"></div>
+
+                            <div id="emptyNotice" class="text-xs text-discord-muted italic py-10 text-center border border-dashed border-discord-border/60 rounded-xl mt-2 font-mono bg-discord-darkBg/30">
+                                Form fields are currently blank. Type text or add embeds to preview message rendering.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSON Payload Raw View -->
+            <div id="viewJson" class="hidden flex-1 flex-col p-4 bg-discord-darkBg overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-mono text-discord-muted">Raw JSON Payload Body</span>
+                    <div class="flex gap-2">
+                        <button onclick="applyJSONToForm()" class="text-xs bg-purple-500/20 text-purple-300 hover:bg-purple-600 hover:text-white px-2.5 py-1 rounded-md transition border border-purple-500/30">
+                            Apply JSON to Form
+                        </button>
+                        <button onclick="copyJSON()" class="text-xs bg-discord-input hover:bg-discord-border text-white px-2.5 py-1 rounded-md transition border border-discord-border font-mono">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                <textarea id="jsonEditor" class="w-full flex-1 bg-discord-input text-discord-text font-mono text-xs p-3 rounded-xl border border-discord-border focus:outline-none resize-none leading-relaxed"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Webhooks Modal -->
+    <div id="savedModal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="gradient-card-border bg-discord-card w-full max-w-md p-5 space-y-4 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-discord-border pb-3">
+                <h3 class="text-sm font-bold text-discord-heading flex items-center gap-2">
+                    <i data-lucide="bookmark" class="w-4 h-4 text-purple-400"></i> Saved Webhook URLs
+                </h3>
+                <button onclick="closeSavedModal()" class="text-discord-muted hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="savedWebhooksList" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+            <div class="text-right pt-2 border-t border-discord-border">
+                <button onclick="closeSavedModal()" class="px-4 py-1.5 bg-discord-input hover:bg-discord-border text-xs text-white rounded-lg border border-discord-border">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        let embeds = [];
+        let savedWebhooks = JSON.parse(localStorage.getItem('lavin_webhooks_v3') || '[]');
+        let useCorsProxy = true;
+        
+        // Metadata storage for fetched Webhook default name and avatar
+        let fetchedWebhookMeta = {
+            name: "Lav1n's Webhook",
+            avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png",
+            fetched: false
+        };
+
+        let fetchDebounceTimer = null;
+
+        window.onload = function () {
+            lucide.createIcons();
+            updateSavedCount();
+            runPreflightValidation();
+            updatePreview();
+        };
+
+        function toggleProxySetting() {
+            useCorsProxy = !useCorsProxy;
+            const badge = document.getElementById('proxyBadge');
+            const label = document.getElementById('proxyLabel');
+            if (useCorsProxy) {
+                badge.className = "w-2 h-2 rounded-full bg-discord-green shadow-[0_0_8px_#23a55a]";
+                label.innerText = "CORS Proxy Auto";
+                showToast('CORS Proxy Auto-Fallback Enabled', 'info');
+            } else {
+                badge.className = "w-2 h-2 rounded-full bg-discord-yellow shadow-[0_0_8px_#f0b232]";
+                label.innerText = "Direct Only Mode";
+                showToast('Direct Request Mode Enabled', 'info');
+            }
+        }
+
+        function handleWebhookUrlInput() {
+            runPreflightValidation();
+            updatePreview();
+
+            clearTimeout(fetchDebounceTimer);
+            fetchDebounceTimer = setTimeout(() => {
+                fetchWebhookMetadata();
+            }, 600);
+        }
+
+        async function fetchWebhookMetadata() {
+            const url = document.getElementById('webhookUrl').value.trim();
+            const badge = document.getElementById('webhookFetchedBadge');
+
+            if (!url || (!url.startsWith('https://discord.com/api/webhooks/') && !url.startsWith('https://discordapp.com/api/webhooks/'))) {
+                fetchedWebhookMeta = { name: "Lav1n's Webhook", avatarUrl: "https://cdn.discordapp.com/embed/avatars/0.png", fetched: false };
+                badge.classList.add('hidden');
+                updatePreview();
+                return;
+            }
+
+            try {
+                let res = await fetch(url);
+                if (!res.ok && useCorsProxy) {
+                    res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                }
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const name = data.name || "Discord Webhook";
+                    let avatarUrl = "https://cdn.discordapp.com/embed/avatars/0.png";
+
+                    if (data.avatar && data.id) {
+                        avatarUrl = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`;
+                    }
+
+                    fetchedWebhookMeta = { name, avatarUrl, fetched: true };
+                    
+                    document.getElementById('webhookFetchedName').innerText = name;
+                    document.getElementById('webhookFetchedIcon').src = avatarUrl;
+                    badge.classList.remove('hidden');
+
+                    updatePreview();
+                } else {
+                    badge.classList.add('hidden');
+                }
+            } catch (err) {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function addNewEmbed(data = {}) {
+            if (embeds.length >= 10) {
+                showToast('Discord limits messages to 10 embeds maximum', 'error');
+                return;
+            }
+
+            const embedId = Date.now() + Math.random().toString(36).substr(2, 4);
+            const newEmbed = {
+                id: embedId,
+                title: data.title || '',
+                titleUrl: data.titleUrl || '',
+                description: data.description || '',
+                color: data.color || '#8B5CF6',
+                authorName: data.authorName || '',
+                authorIcon: data.authorIcon || '',
+                authorUrl: data.authorUrl || '',
+                image: data.image || '',
+                thumbnail: data.thumbnail || '',
+                footerText: data.footerText || '',
+                footerIcon: data.footerIcon || '',
+                timestamp: data.timestamp || false,
+                fields: data.fields ? JSON.parse(JSON.stringify(data.fields)) : [],
+                collapsed: false
+            };
+
+            embeds.push(newEmbed);
+            renderEmbedsUI();
+            runPreflightValidation();
+            updatePreview();
+        }
+
+        function removeEmbed(id) {
+            embeds = embeds.filter(e => e.id !== id);
+            renderEmbedsUI();
+            runPreflightValidation();
+            updatePreview();
+        }
+
+        function duplicateEmbed(id) {
+            const target = embeds.find(e => e.id === id);
+            if (target) addNewEmbed(target);
+        }
+
+        function clearAllEmbeds() {
+            embeds = [];
+            renderEmbedsUI();
+            runPreflightValidation();
+            updatePreview();
+            showToast('Cleared all embeds', 'info');
+        }
+
+        function toggleEmbedCollapse(id) {
+            const target = embeds.find(e => e.id === id);
+            if (target) {
+                target.collapsed = !target.collapsed;
+                renderEmbedsUI();
+            }
+        }
+
+        function renderEmbedsUI() {
+            const container = document.getElementById('embedsContainer');
+            document.getElementById('embedCount').innerText = embeds.length;
+            container.innerHTML = '';
+
+            if (embeds.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-6 border border-dashed border-discord-border/60 rounded-xl text-discord-muted text-xs font-mono bg-discord-input/30">
+                        No active embeds. Click <strong class="text-purple-400">+ Add Embed</strong> to build an embed card.
+                    </div>
+                `;
+                return;
+            }
+
+            embeds.forEach((emb, index) => {
+                const card = document.createElement('div');
+                card.className = "bg-discord-input rounded-xl border border-discord-border overflow-hidden transition shadow-sm";
+                
+                card.innerHTML = `
+                    <div class="px-3.5 py-2 bg-discord-card flex items-center justify-between border-b border-discord-border cursor-pointer select-none" onclick="toggleEmbedCollapse('${emb.id}')">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full shrink-0 shadow-sm" style="background-color: ${emb.color || '#8B5CF6'};"></span>
+                            <span class="text-xs font-bold text-discord-heading">Embed #${index + 1}</span>
+                            <span class="text-[11px] text-discord-muted font-mono truncate max-w-[150px]">${escapeHtml(emb.title) || '(Untitled Embed)'}</span>
+                        </div>
+                        <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+                            <button onclick="duplicateEmbed('${emb.id}')" class="p-1 hover:bg-discord-input text-discord-muted hover:text-white rounded" title="Duplicate">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="removeEmbed('${emb.id}')" class="p-1 hover:bg-discord-input text-discord-muted hover:text-discord-red rounded" title="Remove Embed">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="toggleEmbedCollapse('${emb.id}')" class="p-1 hover:bg-discord-input text-discord-muted hover:text-white rounded">
+                                <i data-lucide="${emb.collapsed ? 'chevron-down' : 'chevron-up'}" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="${emb.collapsed ? 'hidden' : 'p-3 space-y-3'}">
+                        <!-- Accent Color -->
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-medium text-discord-muted font-mono">Accent Color</label>
+                            <div class="flex items-center gap-1.5 bg-discord-darkBg rounded-lg px-2 py-1 border border-discord-border">
+                                <input type="color" value="${emb.color || '#8B5CF6'}" oninput="updateEmbedProp('${emb.id}', 'color', this.value)" class="w-4 h-4 bg-transparent cursor-pointer border-0">
+                                <input type="text" value="${emb.color || '#8B5CF6'}" oninput="updateEmbedProp('${emb.id}', 'color', this.value)" class="w-16 bg-transparent text-xs text-discord-heading uppercase font-mono focus:outline-none">
+                            </div>
+                        </div>
+
+                        <!-- Author Section -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-discord-muted font-mono block">Author Section</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input type="text" value="${escapeHtml(emb.authorName)}" placeholder="Author Name" oninput="updateEmbedProp('${emb.id}', 'authorName', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                                <input type="text" value="${escapeHtml(emb.authorIcon)}" placeholder="Author Icon URL" oninput="updateEmbedProp('${emb.id}', 'authorIcon', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                            </div>
+                        </div>
+
+                        <!-- Title & Description -->
+                        <div class="space-y-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input type="text" value="${escapeHtml(emb.title)}" placeholder="Title" oninput="updateEmbedProp('${emb.id}', 'title', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                                <input type="text" value="${escapeHtml(emb.titleUrl)}" placeholder="Title Link URL" oninput="updateEmbedProp('${emb.id}', 'titleUrl', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                            </div>
+                            <textarea rows="2" placeholder="Embed Description..." oninput="updateEmbedProp('${emb.id}', 'description', this.value)" class="w-full discord-input text-xs rounded-lg p-2.5 resize-y">${escapeHtml(emb.description)}</textarea>
+                        </div>
+
+                        <!-- Fields Section -->
+                        <div class="space-y-2 pt-1 border-t border-discord-border/50">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold font-mono text-discord-muted">Fields (${emb.fields.length}/25)</span>
+                                <button onclick="addEmbedField('${emb.id}')" class="text-[11px] text-purple-400 hover:text-purple-300 hover:underline font-semibold">+ Add Field</button>
+                            </div>
+                            <div id="fieldsContainer_${emb.id}" class="space-y-2"></div>
+                        </div>
+
+                        <!-- Images Section -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                            <input type="text" value="${escapeHtml(emb.image)}" placeholder="Main Image URL" oninput="updateEmbedProp('${emb.id}', 'image', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                            <input type="text" value="${escapeHtml(emb.thumbnail)}" placeholder="Thumbnail URL" oninput="updateEmbedProp('${emb.id}', 'thumbnail', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                        </div>
+
+                        <!-- Footer Section -->
+                        <div class="space-y-1.5 pt-1 border-t border-discord-border/50">
+                            <label class="text-[11px] font-medium text-discord-muted font-mono block">Footer Section</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input type="text" value="${escapeHtml(emb.footerText)}" placeholder="Footer Text" oninput="updateEmbedProp('${emb.id}', 'footerText', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                                <input type="text" value="${escapeHtml(emb.footerIcon)}" placeholder="Footer Icon URL" oninput="updateEmbedProp('${emb.id}', 'footerIcon', this.value)" class="discord-input text-xs rounded-lg px-2.5 py-1.5">
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer pt-1">
+                                <input type="checkbox" ${emb.timestamp ? 'checked' : ''} onchange="updateEmbedProp('${emb.id}', 'timestamp', this.checked)" class="rounded border-discord-border text-purple-500 focus:ring-0">
+                                <span class="text-xs text-discord-muted font-mono">Include Timestamp</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+                renderEmbedFieldsUI(emb);
+            });
+
+            lucide.createIcons();
+        }
+
+        function updateEmbedProp(id, key, val) {
+            const target = embeds.find(e => e.id === id);
+            if (target) {
+                target[key] = val;
+                runPreflightValidation();
+                updatePreview();
+            }
+        }
+
+        function addEmbedField(embedId) {
+            const target = embeds.find(e => e.id === embedId);
+            if (!target) return;
+            if (target.fields.length >= 25) {
+                showToast('Maximum 25 fields per embed limit', 'error');
+                return;
+            }
+            target.fields.push({ id: Date.now() + Math.random(), name: '', value: '', inline: false });
+            renderEmbedsUI();
+            runPreflightValidation();
+            updatePreview();
+        }
+
+        function removeEmbedField(embedId, fieldId) {
+            const target = embeds.find(e => e.id === embedId);
+            if (target) {
+                target.fields = target.fields.filter(f => f.id !== fieldId);
+                renderEmbedsUI();
+                runPreflightValidation();
+                updatePreview();
+            }
+        }
+
+        function updateEmbedFieldProp(embedId, fieldId, key, val) {
+            const target = embeds.find(e => e.id === embedId);
+            if (target) {
+                const field = target.fields.find(f => f.id === fieldId);
+                if (field) {
+                    field[key] = val;
+                    runPreflightValidation();
+                    updatePreview();
+                }
+            }
+        }
+
+        function renderEmbedFieldsUI(emb) {
+            const container = document.getElementById(`fieldsContainer_${emb.id}`);
+            if (!container) return;
+            container.innerHTML = '';
+
+            emb.fields.forEach((field, fIdx) => {
+                const fDiv = document.createElement('div');
+                fDiv.className = "bg-discord-darkBg p-2 rounded-lg border border-discord-border space-y-1.5";
+                fDiv.innerHTML = `
+                    <div class="flex items-center justify-between text-[10px] font-mono">
+                        <span class="text-discord-muted font-bold">Field #${fIdx + 1}</span>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1 cursor-pointer text-discord-muted">
+                                <input type="checkbox" ${field.inline ? 'checked' : ''} onchange="updateEmbedFieldProp('${emb.id}', ${field.id}, 'inline', this.checked)" class="rounded border-discord-border text-purple-500">
+                                Inline
+                            </label>
+                            <button onclick="removeEmbedField('${emb.id}', ${field.id})" class="text-discord-muted hover:text-discord-red">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <input type="text" value="${escapeHtml(field.name)}" placeholder="Field Name" oninput="updateEmbedFieldProp('${emb.id}', ${field.id}, 'name', this.value)" class="discord-input text-xs rounded px-2 py-1">
+                        <input type="text" value="${escapeHtml(field.value)}" placeholder="Field Value" oninput="updateEmbedFieldProp('${emb.id}', ${field.id}, 'value', this.value)" class="discord-input text-xs rounded px-2 py-1">
+                    </div>
+                `;
+                container.appendChild(fDiv);
+            });
+            lucide.createIcons();
+        }
+
+        function buildPayload() {
+            const payload = {};
+
+            const username = document.getElementById('botName').value.trim();
+            const avatar_url = document.getElementById('botAvatar').value.trim();
+            const content = document.getElementById('msgContent').value.trim();
+
+            if (username) payload.username = username;
+            if (avatar_url) payload.avatar_url = avatar_url;
+            if (content) payload.content = content;
+
+            const processedEmbeds = [];
+
+            embeds.forEach(emb => {
+                const embedObj = {};
+
+                if (emb.title && emb.title.trim()) embedObj.title = emb.title.trim();
+                if (emb.titleUrl && emb.titleUrl.trim()) embedObj.url = emb.titleUrl.trim();
+                if (emb.description && emb.description.trim()) embedObj.description = emb.description.trim();
+
+                if (emb.authorName && emb.authorName.trim()) {
+                    embedObj.author = { name: emb.authorName.trim() };
+                    if (emb.authorIcon && emb.authorIcon.trim()) embedObj.author.icon_url = emb.authorIcon.trim();
+                    if (emb.authorUrl && emb.authorUrl.trim()) embedObj.author.url = emb.authorUrl.trim();
+                }
+
+                if (emb.fields && emb.fields.length > 0) {
+                    const validFields = emb.fields
+                        .filter(f => (f.name && f.name.trim()) || (f.value && f.value.trim()))
+                        .map(f => ({
+                            name: (f.name && f.name.trim()) ? f.name.trim() : '\u200B',
+                            value: (f.value && f.value.trim()) ? f.value.trim() : '\u200B',
+                            inline: !!f.inline
+                        }));
+                    if (validFields.length > 0) embedObj.fields = validFields;
+                }
+
+                if (emb.image && emb.image.trim()) embedObj.image = { url: emb.image.trim() };
+                if (emb.thumbnail && emb.thumbnail.trim()) embedObj.thumbnail = { url: emb.thumbnail.trim() };
+
+                if (emb.footerText && emb.footerText.trim()) {
+                    embedObj.footer = { text: emb.footerText.trim() };
+                    if (emb.footerIcon && emb.footerIcon.trim()) embedObj.footer.icon_url = emb.footerIcon.trim();
+                }
+
+                if (emb.timestamp) {
+                    embedObj.timestamp = new Date().toISOString();
+                }
+
+                // Check if embed has actual visible contents (not just accent color or timestamp alone)
+                const hasSubstance = embedObj.title || embedObj.description || embedObj.url || 
+                                     embedObj.author || (embedObj.fields && embedObj.fields.length > 0) || 
+                                     embedObj.image || embedObj.thumbnail || embedObj.footer;
+
+                if (hasSubstance) {
+                    if (emb.color) {
+                        const cleanHex = emb.color.replace('#', '');
+                        const colorNum = parseInt(cleanHex, 16);
+                        if (!isNaN(colorNum)) embedObj.color = colorNum;
+                    }
+                    processedEmbeds.push(embedObj);
+                }
+            });
+
+            if (processedEmbeds.length > 0) {
+                payload.embeds = processedEmbeds;
+            }
+
+            return payload;
+        }
+
+        function runPreflightValidation() {
+            const url = document.getElementById('webhookUrl').value.trim();
+            const content = document.getElementById('msgContent').value.trim();
+            const statusEl = document.getElementById('preflightStatus');
+            const payload = buildPayload();
+
+            let totalChars = content.length;
+            if (payload.embeds) {
+                payload.embeds.forEach(e => {
+                    if (e.title) totalChars += e.title.length;
+                    if (e.description) totalChars += e.description.length;
+                    if (e.fields) e.fields.forEach(f => totalChars += (f.name.length + f.value.length));
+                });
+            }
+
+            const activeEmbedsCount = payload.embeds ? payload.embeds.length : 0;
+            document.getElementById('preflightCount').innerText = `${activeEmbedsCount} Active Embeds`;
+            document.getElementById('preflightChars').innerText = `${totalChars} / 6000 Chars`;
+
+            if (!url) {
+                statusEl.innerHTML = `<span class="text-discord-yellow">Webhook URL missing</span>`;
+                return false;
+            }
+            if (!url.startsWith('https://discord.com/api/webhooks/') && !url.startsWith('https://discordapp.com/api/webhooks/')) {
+                statusEl.innerHTML = `<span class="text-discord-red">Invalid Webhook URL syntax</span>`;
+                return false;
+            }
+            if (!content && (!payload.embeds || payload.embeds.length === 0)) {
+                statusEl.innerHTML = `<span class="text-discord-yellow">Payload empty - enter text content or fill an embed</span>`;
+                return false;
+            }
+            if (totalChars > 6000) {
+                statusEl.innerHTML = `<span class="text-discord-red">Payload exceeds Discord 6000 character limit</span>`;
+                return false;
+            }
+
+            statusEl.innerHTML = `<span class="text-discord-green font-semibold">Payload Valid & Ready</span>`;
+            return true;
+        }
+
+        function updatePreview() {
+            const payload = buildPayload();
+            document.getElementById('jsonEditor').value = JSON.stringify(payload, null, 2);
+
+            const displayName = payload.username || fetchedWebhookMeta.name || "Lav1n's Webhook";
+            const displayAvatar = payload.avatar_url || fetchedWebhookMeta.avatarUrl || 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+            document.getElementById('prevBotName').innerText = displayName;
+            document.getElementById('prevAvatar').src = displayAvatar;
+
+            const now = new Date();
+            document.getElementById('prevMsgTime').innerText = `Today at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+            const contentBox = document.getElementById('prevContent');
+            if (payload.content) {
+                contentBox.classList.remove('hidden');
+                contentBox.innerHTML = formatDiscordMarkdown(payload.content);
+            } else {
+                contentBox.classList.add('hidden');
+            }
+
+            const embedsList = document.getElementById('prevEmbedsList');
+            const emptyNotice = document.getElementById('emptyNotice');
+            embedsList.innerHTML = '';
+
+            if (payload.embeds && payload.embeds.length > 0) {
+                payload.embeds.forEach(emb => {
+                    const hexColor = emb.color ? '#' + emb.color.toString(16).padStart(6, '0') : '#8B5CF6';
+                    
+                    const box = document.createElement('div');
+                    box.className = "max-w-lg bg-discord-card rounded-md border-l-4 overflow-hidden flex flex-col p-3.5 shadow-md";
+                    box.style.borderColor = hexColor;
+
+                    let authorHTML = '';
+                    if (emb.author) {
+                        authorHTML = `
+                            <div class="flex items-center gap-2 text-xs text-white font-medium mb-1.5">
+                                ${emb.author.icon_url ? `<img src="${escapeHtml(emb.author.icon_url)}" class="w-4 h-4 rounded-full object-cover">` : ''}
+                                ${emb.author.url ? `<a href="${escapeHtml(emb.author.url)}" target="_blank" class="hover:underline">${escapeHtml(emb.author.name)}</a>` : `<span>${escapeHtml(emb.author.name)}</span>`}
+                            </div>
+                        `;
+                    }
+
+                    let titleHTML = '';
+                    if (emb.title) {
+                        titleHTML = emb.url 
+                            ? `<a href="${escapeHtml(emb.url)}" target="_blank" class="font-bold text-white hover:underline block text-base mb-1">${escapeHtml(emb.title)}</a>`
+                            : `<div class="font-bold text-white block text-base mb-1">${escapeHtml(emb.title)}</div>`;
+                    }
+
+                    let descHTML = emb.description ? `<div class="text-xs text-discord-text discord-markdown space-y-1 mb-2">${formatDiscordMarkdown(emb.description)}</div>` : '';
+                    let thumbHTML = (emb.thumbnail && emb.thumbnail.url) ? `<img src="${escapeHtml(emb.thumbnail.url)}" class="w-20 h-20 rounded-md object-cover shrink-0">` : '';
+
+                    let fieldsHTML = '';
+                    if (emb.fields && emb.fields.length > 0) {
+                        let fieldsGrid = emb.fields.map(f => `
+                            <div class="${f.inline ? 'col-span-4' : 'col-span-12'} min-w-0">
+                                <div class="text-xs font-semibold text-white truncate">${escapeHtml(f.name)}</div>
+                                <div class="text-xs text-discord-text discord-markdown break-words">${formatDiscordMarkdown(f.value)}</div>
+                            </div>
+                        `).join('');
+                        fieldsHTML = `<div class="grid grid-cols-12 gap-2 my-2">${fieldsGrid}</div>`;
+                    }
+
+                    let imageHTML = (emb.image && emb.image.url) ? `<img src="${escapeHtml(emb.image.url)}" class="mt-2 rounded-md w-full object-cover max-h-80">` : '';
+
+                    let footerHTML = '';
+                    if (emb.footer || emb.timestamp) {
+                        const icon = (emb.footer && emb.footer.icon_url) ? `<img src="${escapeHtml(emb.footer.icon_url)}" class="w-4 h-4 rounded-full object-cover">` : '';
+                        const text = (emb.footer && emb.footer.text) ? escapeHtml(emb.footer.text) : '';
+                        const bullet = (text && emb.timestamp) ? ' &bull; ' : '';
+                        const time = emb.timestamp ? new Date(emb.timestamp).toLocaleString() : '';
+
+                        footerHTML = `
+                            <div class="flex items-center gap-2 text-[11px] text-discord-muted mt-2 pt-2 border-t border-gray-700/50">
+                                ${icon}
+                                <span>${text}${bullet}${time}</span>
+                            </div>
+                        `;
+                    }
+
+                    box.innerHTML = `
+                        ${authorHTML}
+                        <div class="flex justify-between gap-4">
+                            <div class="flex-1 min-w-0">
+                                ${titleHTML}
+                                ${descHTML}
+                            </div>
+                            ${thumbHTML}
+                        </div>
+                        ${fieldsHTML}
+                        ${imageHTML}
+                        ${footerHTML}
+                    `;
+
+                    embedsList.appendChild(box);
+                });
+            }
+
+            if (!payload.content && (!payload.embeds || payload.embeds.length === 0)) {
+                emptyNotice.classList.remove('hidden');
+            } else {
+                emptyNotice.classList.add('hidden');
+            }
+        }
+
+        async function sendWebhook() {
+            const rawUrl = document.getElementById('webhookUrl').value.trim();
+            if (!rawUrl) {
+                showToast('Please enter a Discord Webhook URL', 'error');
+                return;
+            }
+
+            const payload = buildPayload();
+
+            if (!payload.content && (!payload.embeds || payload.embeds.length === 0)) {
+                showToast('Cannot send an empty message. Enter text or fill an embed!', 'error');
+                return;
+            }
+
+            const sendBtn = document.getElementById('sendBtn');
+            const statusBadge = document.getElementById('statusBadge');
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Sending...`;
+            lucide.createIcons();
+
+            const postOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            };
+
+            try {
+                let response = await fetch(rawUrl, postOptions);
+
+                if ((!response.ok && response.status === 0) || (useCorsProxy && response.status >= 400 && response.status !== 404)) {
+                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+                    response = await fetch(proxyUrl, postOptions);
+                }
+
+                if (response.status === 204 || response.status === 200) {
+                    showToast('Webhook message sent successfully!', 'success');
+                    statusBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-discord-green shadow-[0_0_8px_#23a55a]"></span><span class="text-discord-green font-medium">Delivered</span>`;
+                } else {
+                    const errBody = await response.json().catch(() => ({}));
+                    const msg = errBody.message ? `: ${errBody.message}` : '';
+                    showToast(`Failed to send (HTTP ${response.status}${msg})`, 'error');
+                    statusBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-discord-red shadow-[0_0_8px_#f23f43]"></span><span class="text-discord-red font-medium">HTTP ${response.status} Error</span>`;
+                }
+            } catch (networkErr) {
+                if (useCorsProxy) {
+                    try {
+                        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+                        const proxyRes = await fetch(proxyUrl, postOptions);
+                        if (proxyRes.status === 204 || proxyRes.status === 200) {
+                            showToast('Delivered via Proxy Relay!', 'success');
+                            statusBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-discord-green shadow-[0_0_8px_#23a55a]"></span><span class="text-discord-green font-medium">Delivered</span>`;
+                            return;
+                        } else {
+                            const proxyErrBody = await proxyRes.json().catch(() => ({}));
+                            const msg = proxyErrBody.message ? `: ${proxyErrBody.message}` : '';
+                            showToast(`Failed to send (HTTP ${proxyRes.status}${msg})`, 'error');
+                            statusBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-discord-red shadow-[0_0_8px_#f23f43]"></span><span class="text-discord-red font-medium">HTTP ${proxyRes.status} Error</span>`;
+                            return;
+                        }
+                    } catch (pErr) {}
+                }
+
+                showToast('Network error or CORS block when contacting Discord', 'error');
+                statusBadge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-discord-red shadow-[0_0_8px_#f23f43]"></span><span class="text-discord-red font-medium">Network Blocked</span>`;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<i data-lucide="send" class="w-4 h-4"></i> Send Message`;
+                lucide.createIcons();
+            }
+        }
+
+        async function testConnection() {
+            const url = document.getElementById('webhookUrl').value.trim();
+            if (!url) {
+                showToast('Please enter a Webhook URL first', 'error');
+                return;
+            }
+
+            try {
+                let res = await fetch(url);
+                if (!res.ok && useCorsProxy) {
+                    res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                }
+
+                if (res.ok) {
+                    const data = await res.json();
+                    showToast(`Connected to: ${data.name || 'Webhook'}!`, 'success');
+                    fetchWebhookMetadata();
+                } else {
+                    showToast(`Webhook unreachable (HTTP ${res.status})`, 'error');
+                }
+            } catch (e) {
+                showToast('Could not reach Discord Webhook URL', 'error');
+            }
+        }
+
+        const TEMPLATES = {
+            announcement: {
+                username: "Lav1n's System",
+                avatar_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+                content: "📢 **ANNOUNCEMENT**",
+                embeds: [{
+                    title: "System Update Live",
+                    description: "Welcome to Lav1n's Webhooks dashboard.",
+                    color: "#8B5CF6",
+                    authorName: "System Admin",
+                    fields: [{ name: "Status", value: "Operational", inline: true }]
+                }]
+            },
+            bugReport: {
+                username: "Bug Reporter",
+                content: "🚨 **BUG REPORT LOG**",
+                embeds: [{
+                    title: "Issue Identified",
+                    description: "An issue was reported by a user.",
+                    color: "#f23f43",
+                    fields: [{ name: "Severity", value: "High", inline: true }]
+                }]
+            },
+            welcome: {
+                username: "Welcome Bot",
+                content: "🎉 **WELCOME**",
+                embeds: [{
+                    title: "New Member Joined",
+                    description: "Welcome to the server!",
+                    color: "#23a55a"
+                }]
+            }
+        };
+
+        function loadTemplate(key) {
+            const t = TEMPLATES[key];
+            if (!t) return;
+
+            document.getElementById('botName').value = t.username || '';
+            document.getElementById('botAvatar').value = t.avatar_url || '';
+            document.getElementById('msgContent').value = t.content || '';
+
+            embeds = [];
+            if (t.embeds) {
+                t.embeds.forEach(embData => addNewEmbed(embData));
+            } else {
+                renderEmbedsUI();
+                runPreflightValidation();
+                updatePreview();
+            }
+
+            toggleTemplatesMenu(false);
+            showToast(`Loaded ${key} template!`, 'info');
+        }
+
+        function insertMD(prefix, suffix = '') {
+            const textarea = document.getElementById('msgContent');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const text = textarea.value;
+            const selected = text.substring(start, end) || 'text';
+            const replacement = prefix + selected + suffix;
+            
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+            runPreflightValidation();
+            updatePreview();
+        }
+
+        function toggleTemplatesMenu(forceState) {
+            const dropdown = document.getElementById('templatesDropdown');
+            if (typeof forceState === 'boolean') {
+                dropdown.classList.toggle('hidden', !forceState);
+            } else {
+                dropdown.classList.toggle('hidden');
+            }
+        }
+
+        function saveCurrentWebhook() {
+            const url = document.getElementById('webhookUrl').value.trim();
+            if (!url) {
+                showToast('Enter a Webhook URL to save', 'error');
+                return;
+            }
+            const name = prompt('Enter a label for this webhook:', fetchedWebhookMeta.name || 'Main Channel');
+            if (!name) return;
+
+            savedWebhooks.push({ id: Date.now(), name, url });
+            localStorage.setItem('lavin_webhooks_v3', JSON.stringify(savedWebhooks));
+            updateSavedCount();
+            showToast('Webhook saved!', 'success');
+        }
+
+        function updateSavedCount() {
+            document.getElementById('savedCount').innerText = savedWebhooks.length;
+        }
+
+        function openSavedWebhooksModal() {
+            const container = document.getElementById('savedWebhooksList');
+            container.innerHTML = '';
+
+            if (savedWebhooks.length === 0) {
+                container.innerHTML = `<p class="text-xs text-discord-muted py-4 text-center font-mono">No saved webhooks found.</p>`;
+            } else {
+                savedWebhooks.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "flex items-center justify-between p-2.5 bg-discord-input rounded-lg border border-discord-border";
+                    div.innerHTML = `
+                        <div class="min-w-0 pr-2">
+                            <div class="text-xs font-bold text-discord-heading font-mono truncate">${escapeHtml(item.name)}</div>
+                            <div class="text-[10px] text-discord-muted font-mono truncate">${escapeHtml(item.url)}</div>
+                        </div>
+                        <div class="flex gap-1 shrink-0">
+                            <button onclick="selectSavedWebhook('${item.url}')" class="px-2.5 py-1 btn-gradient text-xs text-white rounded-md font-medium">Select</button>
+                            <button onclick="deleteSavedWebhook(${item.id})" class="p-1 text-discord-muted hover:text-discord-red"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                lucide.createIcons();
+            }
+
+            document.getElementById('savedModal').classList.remove('hidden');
+        }
+
+        function closeSavedModal() {
+            document.getElementById('savedModal').classList.add('hidden');
+        }
+
+        function selectSavedWebhook(url) {
+            document.getElementById('webhookUrl').value = url;
+            closeSavedModal();
+            handleWebhookUrlInput();
+            showToast('Webhook loaded!', 'info');
+        }
+
+        function deleteSavedWebhook(id) {
+            savedWebhooks = savedWebhooks.filter(w => w.id !== id);
+            localStorage.setItem('lavin_webhooks_v3', JSON.stringify(savedWebhooks));
+            updateSavedCount();
+            openSavedWebhooksModal();
+        }
+
+        function exportJSON() {
+            const payload = buildPayload();
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `webhook-payload-${Date.now()}.json`;
+            link.click();
+            showToast('Exported payload JSON!', 'success');
+        }
+
+        function importJSONPrompt() {
+            const raw = prompt('Paste Raw Discord Payload JSON:');
+            if (!raw) return;
+            try {
+                const parsed = JSON.parse(raw);
+                applyParsedJSON(parsed);
+                showToast('JSON imported successfully!', 'success');
+            } catch (e) {
+                showToast('Invalid JSON syntax', 'error');
+            }
+        }
+
+        function applyJSONToForm() {
+            try {
+                const parsed = JSON.parse(document.getElementById('jsonEditor').value);
+                applyParsedJSON(parsed);
+                showToast('Applied JSON to editor form!', 'success');
+            } catch (e) {
+                showToast('Invalid JSON syntax', 'error');
+            }
+        }
+
+        function applyParsedJSON(parsed) {
+            document.getElementById('botName').value = parsed.username || '';
+            document.getElementById('botAvatar').value = parsed.avatar_url || '';
+            document.getElementById('msgContent').value = parsed.content || '';
+
+            embeds = [];
+            if (parsed.embeds && Array.isArray(parsed.embeds)) {
+                parsed.embeds.forEach(emb => {
+                    let hexColor = '#8B5CF6';
+                    if (emb.color) hexColor = '#' + emb.color.toString(16).padStart(6, '0');
+
+                    addNewEmbed({
+                        title: emb.title || '',
+                        titleUrl: emb.url || '',
+                        description: emb.description || '',
+                        color: hexColor,
+                        authorName: emb.author ? emb.author.name : '',
+                        authorIcon: emb.author ? emb.author.icon_url : '',
+                        authorUrl: emb.author ? emb.author.url : '',
+                        image: emb.image ? emb.image.url : '',
+                        thumbnail: emb.thumbnail ? emb.thumbnail.url : '',
+                        footerText: emb.footer ? emb.footer.text : '',
+                        footerIcon: emb.footer ? emb.footer.icon_url : '',
+                        timestamp: !!emb.timestamp,
+                        fields: emb.fields ? emb.fields.map(f => ({ id: Date.now() + Math.random(), name: f.name, value: f.value, inline: f.inline })) : []
+                    });
+                });
+            } else {
+                renderEmbedsUI();
+                runPreflightValidation();
+                updatePreview();
+            }
+        }
+
+        function copyJSON() {
+            const textarea = document.getElementById('jsonEditor');
+            textarea.select();
+            document.execCommand('copy');
+            showToast('JSON copied to clipboard!', 'info');
+        }
+
+        function clearAllInputs() {
+            document.getElementById('botName').value = '';
+            document.getElementById('botAvatar').value = '';
+            document.getElementById('msgContent').value = '';
+            embeds = [];
+            renderEmbedsUI();
+            runPreflightValidation();
+            updatePreview();
+            showToast('Cleared content & embeds (Webhook URL kept)', 'info');
+        }
+
+        function switchRightTab(tab) {
+            const viewPrev = document.getElementById('viewPreview');
+            const viewJson = document.getElementById('viewJson');
+            const btnPrev = document.getElementById('tabPreviewBtn');
+            const btnJson = document.getElementById('tabJsonBtn');
+
+            if (tab === 'preview') {
+                viewPrev.classList.remove('hidden');
+                viewPrev.classList.add('flex');
+                viewJson.classList.add('hidden');
+                btnPrev.className = "px-3 py-1 text-xs font-semibold rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 text-white border border-purple-500/30 flex items-center gap-1.5 shadow-sm";
+                btnJson.className = "px-3 py-1 text-xs font-medium rounded-md text-discord-muted hover:text-white flex items-center gap-1.5";
+            } else {
+                viewJson.classList.remove('hidden');
+                viewJson.classList.add('flex');
+                viewPrev.classList.add('hidden');
+                btnJson.className = "px-3 py-1 text-xs font-semibold rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 text-white border border-purple-500/30 flex items-center gap-1.5 shadow-sm";
+                btnPrev.className = "px-3 py-1 text-xs font-medium rounded-md text-discord-muted hover:text-white flex items-center gap-1.5";
+            }
+        }
+
+        function formatDiscordMarkdown(str) {
+            if (!str) return '';
+            let escaped = escapeHtml(str);
+            escaped = escaped.replace(/```([\s\S]*?)```/g, '<pre>$1</pre>');
+            escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+            escaped = escaped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            escaped = escaped.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            escaped = escaped.replace(/^&gt;\s?(.*)$/gm, '<blockquote>$1</blockquote>');
+            return escaped.replace(/\n/g, '<br>');
+        }
+
+        function escapeHtml(text) {
+            return (text || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let badgeColor = 'bg-gradient-to-r from-indigo-500 to-purple-500';
+            if (type === 'success') badgeColor = 'bg-discord-green';
+            if (type === 'error') badgeColor = 'bg-discord-red';
+
+            toast.className = `flex items-center gap-2.5 bg-discord-card border border-discord-border text-discord-heading text-xs px-3.5 py-2.5 rounded-lg shadow-2xl transition transform duration-300 pointer-events-auto font-sans`;
+            toast.innerHTML = `
+                <span class="w-2 h-2 rounded-full ${badgeColor}"></span>
+                <span class="font-medium">${escapeHtml(msg)}</span>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
