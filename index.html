@@ -952,10 +952,7 @@
             try {
                 let response = await fetch(rawUrl, postOptions);
 
-                if ((!response.ok && response.status === 0) || (useCorsProxy && response.status >= 400 && response.status !== 404)) {
-                    const proxyUrl = proxify(rawUrl);
-                    response = await fetch(proxyUrl, postOptions);
-                }
+                // Discord answered (even with an error), so show its real message instead of retrying via proxy.
 
                 if (response.status === 204 || response.status === 200) {
                     showToast('Webhook message sent successfully!', 'success');
