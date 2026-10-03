@@ -383,6 +383,8 @@
         let embeds = [];
         let savedWebhooks = JSON.parse(localStorage.getItem('lavin_webhooks_v3') || '[]');
         let useCorsProxy = true;
+        const CORS_PROXY_KEY = '7e7277d5';
+        function proxify(u) { return 'https://corsproxy.io/?key=' + CORS_PROXY_KEY + '&url=' + encodeURIComponent(u); }
         
         // Metadata storage for fetched Webhook default name and avatar
         let fetchedWebhookMeta = {
@@ -439,7 +441,7 @@
             try {
                 let res = await fetch(url);
                 if (!res.ok && useCorsProxy) {
-                    res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                    res = await fetch(proxify(url));
                 }
 
                 if (res.ok) {
@@ -951,7 +953,7 @@
                 let response = await fetch(rawUrl, postOptions);
 
                 if ((!response.ok && response.status === 0) || (useCorsProxy && response.status >= 400 && response.status !== 404)) {
-                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+                    const proxyUrl = proxify(rawUrl);
                     response = await fetch(proxyUrl, postOptions);
                 }
 
@@ -967,7 +969,7 @@
             } catch (networkErr) {
                 if (useCorsProxy) {
                     try {
-                        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(rawUrl);
+                        const proxyUrl = proxify(rawUrl);
                         const proxyRes = await fetch(proxyUrl, postOptions);
                         if (proxyRes.status === 204 || proxyRes.status === 200) {
                             showToast('Delivered via Proxy Relay!', 'success');
@@ -1002,7 +1004,7 @@
             try {
                 let res = await fetch(url);
                 if (!res.ok && useCorsProxy) {
-                    res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+                    res = await fetch(proxify(url));
                 }
 
                 if (res.ok) {
